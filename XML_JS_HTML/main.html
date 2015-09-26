@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>XML Parser</title>
+        <script type="text/javascript">
+            "use strict";
+            function openXML(url){
+                if (url.length===0 || !url){
+                    alert("Empty Input! Please enter a valid xml url")
+                    document.getElementById("reqXML").reset();
+                    return;
+                }
+                var xmlHttp;
+                var xmlDoc;
+                if (window.XMLHttpRequest){
+                    xmlHttp=new XMLHttpRequest();
+                }else{
+                    xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                xmlHttp.open("GET",url,false);
+                xmlHttp.send();
+                if (xmlHttp.status===404){
+                    alert("XML File does not exist");
+                    document.getElementById("reqXML").reset();
+                    return;
+                }
+                xmlDoc = xmlHttp.responseXML;
+                
+                if (xmlDoc===null){
+                    alert("Error in XML File");
+                    document.getElementById("reqXML").reset();
+                    return;
+                }
+                if (xmlDoc.getElementsByTagName("Row").length === 0){
+                    alert("XML File does not contain a Row");
+                    document.getElementById("reqXML").reset();
+                    return;
+                }
+                
+                var htmlContent=parse(xmlDoc);
+                var xmlWindow=window.open("","_blank","scrollbars=yes, resizable=yes, height=300, width=1000");
+                xmlWindow.document.write(htmlContent);
+                document.getElementById("reqXML").reset();
+                return;
+            };
+        
+            function parse(xmlDoc){
+                var httpContent="<html><head><title>Company List</title></head><body><table border='2' style='width:100%'>";
+                
+                var headers=xmlDoc.getElementsByTagName("Data");
+                httpContent+="<tr>"
+                for (var i=0;i<headers.length;i++){
+                    httpContent+="<td>"+headers[i].textContent+"</td>"
+                }
+                httpContent+="</tr>";
+                
+                var rows=xmlDoc.getElementsByTagName("Row");
+                for (var i=0;i<rows.length;i++){
+                    var row=rows[i];
+                    httpContent+="<tr>";
+                    var network=row.getElementsByTagName("Network")[0].textContent;
+                    httpContent+="<td>"+network+"</td>"
+                    var owner=row.getElementsByTagName("Owner")[0].textContent;
+                    httpContent+="<td>"+owner+"</td>"
+                    var feeds=row.getElementsByTagName("Feeds")[0].getElementsByTagName("Feed");
+                    httpContent+="<td><ul>";
+                    for (var j=0;j<feeds.length;j++){
+                        httpContent+="<li>"+feeds[j].textContent+"</li>"
+                    }
+                    httpContent+="</ul></td>";
+                    var notes=row.getElementsByTagName("Notes")[0].textContent;
+                    httpContent+="<td>"+notes+"</td>"
+                    var homepage=row.getElementsByTagName("HomePage")[0].textContent;
+                    httpContent+="<td><a href='"+homepage+"'>"+homepage+"</a></td>"
+                    var logo=row.getElementsByTagName("Logo")[0].textContent;
+                    httpContent+="<td><img src="+logo+" /></td>"
+                    httpContent+="</tr>";
+                }
+                
+                httpContent.concat("</table><noscript></bo").concat("dy></html>");
+		        return httpContent;
+            };
+        </script>
+    </head>
+    <body>
+        <form style="text-align:center" name="myForm" method="GET" id="reqXML" onsubmit="">
+            <p style="font-size:16px">Enter URL for Company List XML file</p>
+            <input type="text" name="xmlUrl"/><br/><br/>
+            <input type="button" name="submit" value="Submit Query" onClick="openXML(this.form.xmlUrl.value)"/>
+        </form>
+        <noscript>
+    </body>
+</html>
